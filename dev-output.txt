@@ -9,3 +9,4 @@
 
  ✓ Starting...
  ✓ Ready in 33.1s
+   Reload env: .env.local
