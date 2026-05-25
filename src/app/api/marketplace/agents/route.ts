@@ -25,7 +25,7 @@ export async function GET() {
       orderBy: { createdAt: 'desc' },
     });
 
-    const serialized = agents.map(a => {
+    const serialized = agents.map((a: typeof agents[0]) => {
       const totalJobs = a.jobs.length;
       let specs: string[] = [];
       try { specs = JSON.parse(a.specialties) as string[]; } catch { specs = []; }
