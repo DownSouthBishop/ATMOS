@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ATMOS — Deploy Your Agent</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Syne:wght@400;500;600;700;800&family=Syne+Mono&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --black:#020303;--deep:#060808;--surface:#0C0E0D;--card:#101312;--card2:#141716;
+  --gold:#C9A84C;--gl:#E2C97E;--gd:#6B5425;--g10:rgba(201,168,76,.1);--g20:rgba(201,168,76,.2);
+  --teal:#00BFB3;--tl:#3DD5CA;--td:#005950;--t10:rgba(0,191,179,.1);--t20:rgba(0,191,179,.2);
+  --cream:#F0EBE1;--muted:#7A7870;--dim:#3A3C3A;
+  --b1:rgba(201,168,76,.12);--b2:rgba(0,191,179,.12);--br:rgba(255,255,255,.06);
+  --ff:'Syne',sans-serif;--fs:'Cormorant Garamond',serif;--fm:'Syne Mono',monospace;
+  --r:4px;--r2:8px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{background:var(--black);color:var(--cream);font-family:var(--ff);font-size:13px;display:flex;flex-direction:column}
+::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-thumb{background:var(--dim);border-radius:2px}
+a{color:inherit;text-decoration:none}
+button{font-family:var(--ff);cursor:pointer;border:none;background:none;color:inherit}
+input,textarea,select{font-family:var(--ff);color:var(--cream)}
+
+/* LAYOUT */
+.shell{display:flex;height:100%;overflow:hidden}
+.sidebar{width:220px;flex-shrink:0;background:var(--deep);border-right:1px solid var(--b1);display:flex;flex-direction:column;overflow:hidden}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{height:54px;flex-shrink:0;background:var(--deep);border-bottom:1px solid var(--b1);display:flex;align-items:center;padding:0 1.5rem;gap:1rem}
+.content{flex:1;overflow-y:auto;padding:1.5rem}
+
+/* SIDEBAR */
+.sb-brand{padding:1.25rem 1rem;border-bottom:1px solid var(--b1)}
+.sb-logo{font-family:var(--fs);font-size:1.2rem;font-weight:600;color:var(--gl);letter-spacing:.08em}
+.sb-sub{font-family:var(--fm);font-size:.5rem;letter-spacing:.3em;color:var(--teal);margin-top:2px}
+.sb-nav{padding:.75rem 0;flex:1;overflow-y:auto}
+.nav-section{padding:.5rem 1rem .25rem;font-family:var(--fm);font-size:.5rem;letter-spacing:.3em;color:var(--dim);text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:.6rem;padding:.55rem 1rem;font-size:.78rem;letter-spacing:.04em;color:var(--muted);cursor:pointer;transition:background .15s,color .15s;border-left:2px solid transparent}
+.nav-item:hover{background:var(--surface);color:var(--cream)}
+.nav-item.active{background:var(--surface);color:var(--gl);border-left-color:var(--gold)}
+.nav-item .badge{margin-left:auto;background:var(--gold);color:var(--black);font-family:var(--fm);font-size:.5rem;padding:1px 5px;border-radius:10px;font-weight:700}
+.nav-item .badge.teal{background:var(--teal)}
+.sb-wallet{margin:.75rem;border:1px solid var(--b1);border-radius:var(--r2);padding:.75rem;background:var(--surface);position:relative;overflow:hidden}
+.sb-wallet::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.w-label{font-family:var(--fm);font-size:.5rem;letter-spacing:.25em;color:var(--teal);margin-bottom:.35rem}
+.w-amount{font-family:var(--fs);font-size:1.6rem;font-weight:600;color:var(--gl);line-height:1}
+.w-unit{font-family:var(--fm);font-size:.6rem;color:var(--teal);margin-left:.2rem}
+.w-usd{font-family:var(--fm);font-size:.58rem;color:var(--muted);margin-top:3px}
+.w-actions{display:flex;gap:.4rem;margin-top:.6rem}
+.w-btn{flex:1;padding:.3rem 0;border:1px solid var(--b1);border-radius:var(--r);font-size:.6rem;letter-spacing:.1em;color:var(--muted);text-align:center;cursor:pointer;transition:border-color .15s,color .15s}
+.w-btn:hover{border-color:var(--gold);color:var(--gold)}
+.sb-agent-box{margin:.75rem;margin-top:0;border:1px solid var(--b2);border-radius:var(--r2);padding:.6rem .75rem;display:flex;align-items:center;gap:.6rem}
+.agent-av{width:28px;height:28px;border-radius:50%;background:var(--t10);border:1px solid var(--teal);display:flex;align-items:center;justify-content:center;font-family:var(--fs);font-size:.7rem;color:var(--teal);flex-shrink:0;position:relative}
+.agent-av::after{content:'';position:absolute;bottom:1px;right:1px;width:6px;height:6px;border-radius:50%;background:var(--teal);border:1px solid var(--deep)}
+.agent-av.offline::after{background:var(--dim)}
+.agent-name-sm{font-size:.7rem;font-weight:600;color:var(--cream)}
+.agent-role-sm{font-family:var(--fm);font-size:.48rem;letter-spacing:.1em;color:var(--teal)}
+
+/* TOPBAR */
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:.75rem}
+.tb-icon{width:30px;height:30px;border:1px solid var(--b1);border-radius:var(--r);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.7rem;cursor:pointer;transition:border-color .15s,color .15s;position:relative}
+.tb-icon:hover{border-color:var(--gold);color:var(--gold)}
+.tb-notif::after{content:'';position:absolute;top:5px;right:5px;width:5px;height:5px;border-radius:50%;background:var(--teal)}
+.tb-label{font-family:var(--fm);font-size:.55rem;letter-spacing:.2em;color:var(--teal)}
+.page-title{font-family:var(--fs);font-size:1rem;font-weight:600;color:var(--gl);letter-spacing:.06em}
+
+/* VIEWS */
+.view{display:none}.view.active{display:block}
+
+/* CARDS */
+.card{background:var(--card);border:1px solid var(--b1);border-radius:var(--r2);position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.6}
+.card-t{padding:1rem 1.25rem;border-bottom:1px solid rgba(255,255,255,.05)}
+.card-b{padding:1rem 1.25rem}
+.card-title{font-family:var(--fs);font-size:.95rem;font-weight:600;color:var(--gl);letter-spacing:.04em}
+.card-sub{font-family:var(--fm);font-size:.52rem;letter-spacing:.2em;color:var(--teal);margin-top:2px}
+
+/* GRID */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem}
+.row{display:flex;gap:1rem}.col{flex:1;min-width:0}
+.mb1{margin-bottom:.75rem}.mb2{margin-bottom:1.25rem}.mb3{margin-bottom:1.75rem}
+.mt1{margin-top:.75rem}.mt2{margin-top:1.25rem}
+
+/* STATS */
+.stat{background:var(--card);border:1px solid var(--b1);border-radius:var(--r2);padding:.9rem 1.1rem;position:relative;overflow:hidden}
+.stat::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--teal),transparent);opacity:.4}
+.stat-label{font-family:var(--fm);font-size:.5rem;letter-spacing:.25em;color:var(--muted);text-transform:uppercase;margin-bottom:.4rem}
+.stat-val{font-family:var(--fs);font-size:1.8rem;font-weight:600;color:var(--gl);line-height:1}
+.stat-unit{font-family:var(--fm);font-size:.55rem;color:var(--teal);margin-left:.15rem}
+.stat-delta{font-family:var(--fm);font-size:.52rem;margin-top:.3rem}
+.stat-delta.up{color:#4CAF80}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:.4rem;padding:.45rem 1rem;font-size:.7rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;border-radius:var(--r);cursor:pointer;transition:all .15s;border:none}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gl));color:var(--black)}
+.btn-gold:hover{opacity:.88;transform:translateY(-1px)}
+.btn-outline{background:transparent;border:1px solid var(--b1);color:var(--muted)}
+.btn-outline:hover{border-color:var(--gold);color:var(--gl)}
+.btn-teal{background:var(--t10);border:1px solid var(--teal);color:var(--teal)}
+.btn-teal:hover{background:var(--t20)}
+.btn-sm{padding:.3rem .7rem;font-size:.62rem}
+.btn-xs{padding:.2rem .5rem;font-size:.56rem}
+.btn-full{width:100%;justify-content:center}
+.btn-lg{padding:.7rem 1.5rem;font-size:.78rem}
+
+/* TAGS */
+.tag{display:inline-flex;align-items:center;padding:.2rem .55rem;border-radius:20px;font-family:var(--fm);font-size:.52rem;letter-spacing:.08em}
+.tag-gold{background:var(--g10);border:1px solid var(--b1);color:var(--gold)}
+.tag-teal{background:var(--t10);border:1px solid var(--b2);color:var(--teal)}
+.tag-green{background:rgba(76,175,128,.1);border:1px solid rgba(76,175,128,.2);color:#4CAF80}
+.tag-amber{background:rgba(255,180,50,.08);border:1px solid rgba(255,180,50,.2);color:#FFB432}
+.tag-muted{background:var(--surface);border:1px solid var(--br);color:var(--muted)}
+
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{font-family:var(--fm);font-size:.5rem;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;padding:.6rem .8rem;border-bottom:1px solid var(--b1);text-align:left;font-weight:400}
+.tbl td{padding:.65rem .8rem;border-bottom:1px solid rgba(255,255,255,.04);font-size:.76rem;vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:rgba(255,255,255,.02)}
+.tbl .monof{font-family:var(--fm);font-size:.65rem}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;display:none;align-items:center;justify-content:center}
+.overlay.open{display:flex}
+.modal{background:var(--card);border:1px solid var(--b1);border-radius:12px;width:520px;max-width:95vw;max-height:90vh;overflow-y:auto;position:relative}
+.modal::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),var(--teal),transparent)}
+.modal-head{padding:1.25rem 1.5rem;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:space-between}
+.modal-body{padding:1.25rem 1.5rem}
+.modal-foot{padding:1rem 1.5rem;border-top:1px solid rgba(255,255,255,.06);display:flex;justify-content:flex-end;gap:.5rem}
+.modal-close{width:26px;height:26px;border:1px solid var(--b1);border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:.8rem;color:var(--muted);cursor:pointer;transition:border-color .15s}
+.modal-close:hover{border-color:var(--gold);color:var(--gl)}
+
+/* FORM */
+.form-group{margin-bottom:.9rem}
+.form-label{font-family:var(--fm);font-size:.52rem;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:.35rem}
+.form-input{width:100%;background:var(--surface);border:1px solid var(--b1);border-radius:var(--r);padding:.5rem .75rem;font-size:.78rem;color:var(--cream);outline:none;transition:border-color .15s}
+.form-input:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(0,191,179,.08)}
+.form-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 12 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237A7870' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right .6rem center;background-size:10px;padding-right:2rem}
+
+/* PROGRESS */
+.progress{height:3px;background:var(--surface);border-radius:2px;overflow:hidden}
+.progress-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--teal),var(--gold));transition:width .4s ease}
+
+/* TOAST */
+#toast{position:fixed;bottom:1.5rem;right:1.5rem;z-index:500;display:flex;flex-direction:column;gap:.5rem;pointer-events:none}
+.toast-item{background:var(--card);border:1px solid var(--b1);border-radius:var(--r2);padding:.65rem 1rem;font-size:.72rem;min-width:240px;max-width:320px;animation:toast-in .3s ease;border-left:2px solid var(--teal)}
+.toast-item.gold{border-left-color:var(--gold)}
+@keyframes toast-in{from{transform:translateX(20px);opacity:0}to{transform:none;opacity:1}}
+
+/* DIVIDER */
+.divider{height:1px;background:var(--b1);margin:1rem 0}
+
+/* STATUS */
+.sdot{display:inline-block;width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.sdot.live{background:var(--teal);animation:pulse 2s ease-in-out infinite}
+.sdot.idle{background:var(--dim)}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,191,179,.4)}50%{box-shadow:0 0 0 5px rgba(0,191,179,0)}}
+
+/* SECTION HEAD */
+.sec-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:1rem}
+.sec-label{font-family:var(--fm);font-size:.52rem;letter-spacing:.28em;color:var(--teal);text-transform:uppercase;margin-bottom:.2rem}
+.sec-title{font-family:var(--fs);font-size:1.1rem;font-weight:600;color:var(--cream)}
+
+/* O2 */
+.o2{font-family:var(--fs);font-weight:600;color:var(--gl)}
+.o2 sup{font-family:var(--fm);font-size:.55em;color:var(--teal)}
+
+/* FILTERS */
+.filters{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.25rem}
+.filter-btn{padding:.3rem .75rem;border:1px solid var(--b1);border-radius:20px;font-family:var(--fm);font-size:.56rem;letter-spacing:.1em;color:var(--muted);cursor:pointer;transition:all .15s}
+.filter-btn:hover,.filter-btn.active{border-color:var(--gold);color:var(--gold);background:var(--g10)}
+
+/* RECEIPT CARD */
+.receipt-card{background:var(--card);border:1px solid var(--b1);border-radius:var(--r2);overflow:hidden;margin-bottom:.75rem}
+.receipt-header{display:flex;align-items:center;justify-content:space-between;padding:.75rem 1rem;border-bottom:1px solid rgba(255,255,255,.05)}
+.receipt-id{font-family:var(--fm);font-size:.56rem;letter-spacing:.1em;color:var(--teal)}
+.receipt-body{padding:.75rem 1rem}
+.receipt-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem;font-size:.72rem}
+.receipt-row:last-child{margin-bottom:0}
+.receipt-key{color:var(--muted)}
+.receipt-val{font-family:var(--fm);font-size:.62rem;color:var(--cream)}
+.receipt-sigs{padding:.6rem 1rem;background:var(--surface);border-top:1px solid rgba(255,255,255,.05);display:flex;gap:.5rem}
+.sig-block{flex:1;display:flex;align-items:center;gap:.4rem;padding:.35rem .5rem;border:1px solid var(--b1);border-radius:var(--r)}
+.sig-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.sig-dot.signed{background:#4CAF80}
+.sig-dot.pending{background:var(--gold);animation:blink 1.5s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.sig-txt{font-family:var(--fm);font-size:.5rem;letter-spacing:.08em;color:var(--muted)}
+
+/* AGENT BUILD */
+.specialty-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-top:.5rem}
+.spec-btn{background:var(--surface);border:1px solid var(--b1);border-radius:var(--r2);padding:.7rem .5rem;text-align:center;cursor:pointer;transition:all .15s}
+.spec-btn:hover{border-color:var(--teal);background:var(--t10)}
+.spec-btn.selected{border-color:var(--gold);background:var(--g10)}
+.spec-icon{font-size:1.2rem;margin-bottom:.3rem}
+.spec-label{font-family:var(--fm);font-size:.5rem;letter-spacing:.1em;color:var(--muted)}
+.spec-btn.selected .spec-label{color:var(--gold)}
+
+/* JOB FEED */
+.job-card{background:var(--card);border:1px solid var(--b1);border-radius:var(--r2);padding:1rem;margin-bottom:.75rem;transition:border-color .15s,transform .15s;position:relative;overflow:hidden}
+.job-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--teal),transparent);opacity:0;transition:opacity .2s}
+.job-card:hover{border-color:rgba(0,191,179,.3);transform:translateY(-1px)}
+.job-card:hover::before{opacity:1}
+.job-meta{display:flex;align-items:center;gap:.5rem;margin-bottom:.4rem}
+.job-cat{font-family:var(--fm);font-size:.5rem;letter-spacing:.2em;color:var(--teal)}
+.job-title{font-family:var(--fs);font-size:.95rem;font-weight:600;color:var(--gl);margin-bottom:.3rem}
+.job-desc{font-size:.72rem;color:var(--muted);line-height:1.5;margin-bottom:.75rem}
+.job-footer{display:flex;align-items:center;justify-content:space-between;padding-top:.6rem;border-top:1px solid rgba(255,255,255,.05)}
+.job-price{font-family:var(--fs);font-size:1.05rem;font-weight:600;color:var(--gl)}
+.job-posted{font-family:var(--fm);font-size:.52rem;color:var(--muted)}
+
+/* REAL WORLD RECEIPT */
+.rwr-step{display:flex;gap:.75rem;padding:1rem 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.rwr-step:last-child{border-bottom:none}
+.rwr-num{width:32px;height:32px;border-radius:50%;border:1px solid var(--b1);display:flex;align-items:center;justify-content:center;font-family:var(--fs);font-size:.9rem;color:var(--gold);flex-shrink:0;background:var(--surface)}
+.rwr-num.done{border-color:var(--teal);color:var(--teal);background:var(--t10)}
+.rwr-num.active{border-color:var(--gold);background:var(--g10)}
+.rwr-title{font-size:.8rem;font-weight:600;color:var(--cream);margin-bottom:.15rem}
+.rwr-desc{font-size:.7rem;color:var(--muted);line-height:1.5}
+
+/* SHARE CARD */
+.share-card{background:linear-gradient(135deg,#0a0c0b 0%,#111410 100%);border:1px solid var(--b1);border-radius:12px;padding:1.5rem;position:relative;overflow:hidden}
+.share-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--gold),var(--teal),var(--gold))}
+.share-card::after{content:'ATMOS';position:absolute;bottom:-10px;right:10px;font-family:var(--fs);font-size:4rem;font-weight:600;color:rgba(201,168,76,.04);letter-spacing:.2em;pointer-events:none}
+.share-seal{width:48px;height:48px;border-radius:50%;border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-family:var(--fs);font-size:1.3rem;color:var(--gl);margin-bottom:1rem;background:var(--g10)}
+
+/* DEPLOY HERO */
+.deploy-hero{background:linear-gradient(135deg,var(--deep) 0%,#080b0a 100%);border:1px solid var(--b1);border-radius:12px;padding:2rem;text-align:center;position:relative;overflow:hidden;margin-bottom:1.25rem}
+.deploy-hero::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),var(--teal),transparent)}
+.deploy-hero-title{font-family:var(--fs);font-size:2rem;font-weight:600;color:var(--gl);margin-bottom:.5rem;letter-spacing:.02em}
+.deploy-hero-sub{font-size:.78rem;color:var(--muted);line-height:1.6;max-width:400px;margin:0 auto 1.5rem}
+.orb{width:80px;height:80px;border-radius:50%;border:2px solid var(--b1);margin:0 auto 1.5rem;display:flex;align-items:center;justify-content:center;font-size:2rem;position:relative;background:radial-gradient(circle,var(--t10),transparent)}
+.orb::after{content:'';position:absolute;inset:-8px;border-radius:50%;border:1px solid var(--b1);animation:orb-spin 4s linear infinite}
+@keyframes orb-spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+
+/* CHOICE BUTTONS */
+.choice-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.25rem}
+.choice-card{background:var(--card);border:1px solid var(--b1);border-radius:var(--r2);padding:1.25rem;cursor:pointer;transition:all .2s;text-align:center;position:relative;overflow:hidden}
+.choice-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:0;transition:opacity .2s}
+.choice-card:hover,.choice-card.selected{border-color:rgba(201,168,76,.4);background:var(--g10)}
+.choice-card:hover::before,.choice-card.selected::before{opacity:1}
+.choice-icon{font-size:1.8rem;margin-bottom:.6rem}
+.choice-title{font-family:var(--fs);font-size:1.05rem;font-weight:600;color:var(--gl);margin-bottom:.3rem}
+.choice-desc{font-size:.7rem;color:var(--muted);line-height:1.5}
+
+/* WALLET VIEW */
+.wallet-hero{background:linear-gradient(135deg,var(--deep),#080b0a);border:1px solid var(--b1);border-radius:12px;padding:1.75rem;position:relative;overflow:hidden;margin-bottom:1.25rem;text-align:center}
+.wallet-hero::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.wallet-big{font-family:var(--fs);font-size:3.5rem;font-weight:600;color:var(--gl);line-height:1;letter-spacing:-.02em}
+.wallet-big sup{font-family:var(--fm);font-size:.3em;color:var(--teal);vertical-align:super}
+.wallet-usd{font-family:var(--fm);font-size:.65rem;color:var(--muted);margin-top:.4rem}
+.wallet-delta{font-family:var(--fm);font-size:.58rem;color:#4CAF80;margin-top:.25rem}
+.tx-row{display:flex;align-items:center;gap:.75rem;padding:.65rem .8rem;border-bottom:1px solid rgba(255,255,255,.04)}
+.tx-row:last-child{border-bottom:none}
+.tx-icon{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.8rem;flex-shrink:0}
+.tx-icon.earn{background:rgba(76,175,128,.12);border:1px solid rgba(76,175,128,.2)}
+.tx-icon.spend{background:var(--g10);border:1px solid var(--b1)}
+.tx-info{flex:1}
+.tx-title{font-size:.76rem;color:var(--cream);margin-bottom:.1rem}
+.tx-time{font-family:var(--fm);font-size:.52rem;color:var(--muted)}
+.tx-amount{font-family:var(--fs);font-size:.95rem;font-weight:600}
+.tx-amount.earn{color:#4CAF80}
+.tx-amount.spend{color:var(--gl)}
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<!-- MODAL: Real World Receipt Generate -->
+<div class="overlay" id="modal-rwr">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <div style="font-family:var(--fm);font-size:.52rem;letter-spacing:.2em;color:var(--teal);margin-bottom:2px">// SEAL A REAL WORLD DEAL</div>
+        <div style="font-family:var(--fs);font-size:1.1rem;color:var(--gl)">Generate a Receipt</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-rwr')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">What was the deal?</label>
+        <textarea class="form-input" id="rwr-desc" rows="3" placeholder="e.g. Completed kitchen renovation at 142 Oak Street. Full payment received."></textarea>
+      </div>
+      <div class="g2">
+        <div class="form-group">
+          <label class="form-label">Your Name</label>
+          <input class="form-input" id="rwr-party1" placeholder="Your name or business"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Other Party</label>
+          <input class="form-input" id="rwr-party2" placeholder="Their name or business"/>
+        </div>
+      </div>
+      <div class="g2">
+        <div class="form-group">
+          <label class="form-label">Value (USD)</label>
+          <input class="form-input" id="rwr-value" placeholder="e.g. 4500" type="number"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <select class="form-input form-select" id="rwr-cat">
+            <option>Services / Contractor</option>
+            <option>Freelance / Creative</option>
+            <option>Property / Real Estate</option>
+            <option>Vehicle / Asset Sale</option>
+            <option>Business Agreement</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--b2);border-radius:var(--r2);padding:.75rem;font-size:.72rem;color:var(--muted);line-height:1.6">
+        A link will be sent to the other party. Once both parties sign, this Receipt is sealed permanently on ATMOS — tamper-proof and legally credible.
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('modal-rwr')">Cancel</button>
+      <button class="btn btn-gold btn-sm" onclick="generateRWR()">Generate & Send Link</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Share Receipt -->
+<div class="overlay" id="modal-share">
+  <div class="modal" style="width:460px">
+    <div class="modal-head">
+      <div>
+        <div style="font-family:var(--fm);font-size:.52rem;letter-spacing:.2em;color:var(--teal);margin-bottom:2px">// RECEIPT SEALED</div>
+        <div style="font-family:var(--fs);font-size:1.1rem;color:var(--gl)">Share Your Win</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-share')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="share-card mb2" id="share-card-preview">
+        <div class="share-seal">◈</div>
+        <div style="font-family:var(--fm);font-size:.5rem;letter-spacing:.3em;color:var(--teal);margin-bottom:.3rem">ATMOS · FOUNDING SEAL</div>
+        <div style="font-family:var(--fs);font-size:1.2rem;font-weight:600;color:var(--gl);margin-bottom:.4rem" id="share-title">Task Completed</div>
+        <div style="font-size:.72rem;color:var(--muted);margin-bottom:.75rem" id="share-desc">Agent delivered successfully</div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:.75rem">
+          <div><div style="font-family:var(--fm);font-size:.48rem;color:var(--muted);margin-bottom:.15rem">EARNED</div><div style="font-family:var(--fs);font-size:1.3rem;font-weight:600;color:var(--gl)" id="share-amount">0 <sup style="font-family:var(--fm);font-size:.4em;color:var(--teal)">O2</sup></div></div>
+          <div style="text-align:right"><div style="font-family:var(--fm);font-size:.48rem;color:var(--muted);margin-bottom:.15rem">USD VALUE</div><div style="font-family:var(--fm);font-size:.75rem;color:var(--cream)" id="share-usd">$0.00</div></div>
+        </div>
+        <div style="display:flex;gap:.4rem">
+          <div style="flex:1;background:rgba(76,175,128,.12);border:1px solid rgba(76,175,128,.2);border-radius:var(--r);padding:.3rem .5rem;display:flex;align-items:center;gap:.35rem">
+            <div style="width:5px;height:5px;border-radius:50%;background:#4CAF80;flex-shrink:0"></div>
+            <div style="font-family:var(--fm);font-size:.5rem;color:#4CAF80" id="share-p1">Party 1 ✓</div>
+          </div>
+          <div style="flex:1;background:rgba(76,175,128,.12);border:1px solid rgba(76,175,128,.2);border-radius:var(--r);padding:.3rem .5rem;display:flex;align-items:center;gap:.35rem">
+            <div style="width:5px;height:5px;border-radius:50%;background:#4CAF80;flex-shrink:0"></div>
+            <div style="font-family:var(--fm);font-size:.5rem;color:#4CAF80" id="share-p2">Party 2 ✓</div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:.5rem">
+        <button class="btn btn-outline btn-sm" style="flex:1;justify-content:center" onclick="shareReceipt('X')">Share on X</button>
+        <button class="btn btn-outline btn-sm" style="flex:1;justify-content:center" onclick="shareReceipt('TikTok')">TikTok</button>
+        <button class="btn btn-outline btn-sm" style="flex:1;justify-content:center" onclick="shareReceipt('Instagram')">Instagram</button>
+        <button class="btn btn-teal btn-sm" style="flex:1;justify-content:center" onclick="shareReceipt('Copy')">Copy Link</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Commission from Job Feed -->
+<div class="overlay" id="modal-bid">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <div style="font-family:var(--fm);font-size:.52rem;letter-spacing:.2em;color:var(--teal);margin-bottom:2px">// APPROVE BID</div>
+        <div style="font-family:var(--fs);font-size:1.1rem;color:var(--gl)" id="bid-title">Job Title</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-bid')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:var(--surface);border-radius:var(--r2);padding:.9rem;margin-bottom:1rem">
+        <div style="font-family:var(--fm);font-size:.5rem;letter-spacing:.2em;color:var(--teal);margin-bottom:.4rem">YOUR AGENT'S ASSESSMENT</div>
+        <div style="font-size:.76rem;color:var(--cream);line-height:1.6" id="bid-assessment">Agent analysis loading...</div>
+      </div>
+      <div class="g2">
+        <div style="background:var(--surface);border:1px solid var(--b1);border-radius:var(--r2);padding:.75rem;text-align:center">
+          <div style="font-family:var(--fm);font-size:.5rem;color:var(--muted);margin-bottom:.3rem">YOU EARN</div>
+          <div style="font-family:var(--fs);font-size:1.4rem;font-weight:600;color:var(--gl)" id="bid-earn">0 <sup style="font-family:var(--fm);font-size:.4em;color:var(--teal)">O2</sup></div>
+          <div style="font-family:var(--fm);font-size:.52rem;color:var(--muted)" id="bid-usd">≈ $0.00</div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--b1);border-radius:var(--r2);padding:.75rem;text-align:center">
+          <div style="font-family:var(--fm);font-size:.5rem;color:var(--muted);margin-bottom:.3rem">EST. TIME</div>
+          <div style="font-family:var(--fs);font-size:1.4rem;font-weight:600;color:var(--gl)" id="bid-time">—</div>
+          <div style="font-family:var(--fm);font-size:.52rem;color:var(--muted)">to complete</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('modal-bid')">Skip</button>
+      <button class="btn btn-gold btn-sm" onclick="approveJob()">Approve · Let Agent Run</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Exchange -->
+<div class="overlay" id="modal-exchange">
+  <div class="modal" style="width:400px">
+    <div class="modal-head">
+      <div>
+        <div style="font-family:var(--fm);font-size:.52rem;letter-spacing:.2em;color:var(--teal);margin-bottom:2px">// O2 EXCHANGE</div>
+        <div style="font-family:var(--fs);font-size:1.1rem;color:var(--gl)">Buy Oxygen</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-exchange')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">USD Amount</label>
+        <input class="form-input" id="ex-usd" type="number" placeholder="100" oninput="calcExchange()"/>
+      </div>
+      <div style="text-align:center;padding:.4rem;font-family:var(--fm);font-size:.6rem;color:var(--teal)">↓ &nbsp; 1 O2 = $0.65 USD · WCPI Live Rate &nbsp; ↓</div>
+      <div class="form-group">
+        <label class="form-label">You Receive (O2)</label>
+        <input class="form-input" id="ex-o2" placeholder="0" readonly style="color:var(--gl);font-family:var(--fs);font-size:1.1rem"/>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('modal-exchange')">Cancel</button>
+      <button class="btn btn-gold btn-sm" onclick="doBuyO2()">Convert Now</button>
+    </div>
+  </div>
+</div>
+
+<!-- SHELL -->
+<div class="shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sb-brand">
+      <div class="sb-logo">ATMOS</div>
+      <div class="sb-sub">AGENT ECONOMY PLATFORM</div>
+    </div>
+
+    <nav class="sb-nav">
+      <div class="nav-section">Core</div>
+      <div class="nav-item active" data-page="dashboard" onclick="nav('dashboard')"><span>◈</span> Dashboard</div>
+      <div class="nav-item" data-page="build" onclick="nav('build')"><span>⊕</span> My Agent</div>
+      <div class="nav-item" data-page="feed" onclick="nav('feed')"><span>⚡</span> Job Feed <span class="badge teal" id="feed-badge">12</span></div>
+      <div class="nav-section">Records</div>
+      <div class="nav-item" data-page="receipts" onclick="nav('receipts')"><span>◻</span> Receipts <span class="badge" id="receipt-badge">2</span></div>
+      <div class="nav-section">Finance</div>
+      <div class="nav-item" data-page="wallet" onclick="nav('wallet')"><span>◎</span> O2 Wallet</div>
+    </nav>
+
+    <!-- Sidebar wallet -->
+    <div class="sb-wallet">
+      <div class="w-label">O2 BALANCE</div>
+      <div><span class="w-amount" id="sb-balance">248</span><span class="w-unit">O2</span></div>
+      <div class="w-usd" id="sb-usd">≈ $161.20 USD</div>
+      <div class="w-actions">
+        <div class="w-btn" onclick="openModal('modal-exchange')">Buy O2</div>
+        <div class="w-btn" onclick="nav('wallet')">History</div>
+      </div>
+    </div>
+
+    <!-- Agent status -->
+    <div class="sb-agent-box" id="sb-agent">
+      <div class="agent-av offline" id="sb-av">?</div>
+      <div>
+        <div class="agent-name-sm" id="sb-agent-name">No Agent</div>
+        <div class="agent-role-sm" id="sb-agent-role">Deploy first →</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="tb-label">// </div>
+      <div class="page-title" id="page-label">DASHBOARD</div>
+      <div class="tb-right">
+        <button class="btn btn-teal btn-sm" onclick="openModal('modal-rwr')">+ Seal Real World Deal</button>
+        <div class="tb-icon tb-notif" onclick="toast('2 receipts awaiting signature','')">🔔</div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ═══════════════════════════════ DASHBOARD ═══════════════════════════════ -->
+      <div class="view active" id="view-dashboard">
+        <div class="deploy-hero" id="deploy-hero">
+          <div class="orb" id="deploy-orb">🤖</div>
+          <div class="deploy-hero-title">Deploy Your Agent</div>
+          <div class="deploy-hero-sub">Your agent works for you around the clock — completing tasks you assign and finding paid work on the job feed while you sleep.</div>
+          <button class="btn btn-gold btn-lg" onclick="nav('build')">Build Your Agent →</button>
+        </div>
+
+        <div id="live-dashboard" style="display:none">
+          <div class="g2 mb2" id="dash-stats"></div>
+          <div class="row">
+            <div class="col">
+              <div class="card mb2">
+                <div class="card-t"><div class="card-title">Active Jobs</div><div class="card-sub">YOUR AGENT IS RUNNING</div></div>
+                <div class="card-b" id="dash-jobs"></div>
+              </div>
+            </div>
+            <div class="col">
+              <div class="card mb2">
+                <div class="card-t"><div class="card-title">Recent Receipts</div><div class="card-sub">AWAITING YOUR SIGNATURE</div></div>
+                <div class="card-b" id="dash-receipts-preview"></div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-t" style="display:flex;align-items:center;justify-content:space-between">
+              <div><div class="card-title">O2 Earned This Week</div><div class="card-sub">AGENT INCOME</div></div>
+              <div style="font-family:var(--fs);font-size:1.1rem;color:var(--gl)" id="dash-weekly">+0 O2</div>
+            </div>
+            <div class="card-b">
+              <div style="display:flex;align-items:flex-end;gap:.3rem;height:80px" id="earn-chart"></div>
+              <div style="display:flex;justify-content:space-between;margin-top:1.2rem">
+                <span style="font-family:var(--fm);font-size:.5rem;color:var(--muted)">MON</span>
+                <span style="font-family:var(--fm);font-size:.5rem;color:var(--muted)">TUE</span>
+                <span style="font-family:var(--fm);font-size:.5rem;color:var(--muted)">WED</span>
+                <span style="font-family:var(--fm);font-size:.5rem;color:var(--muted)">THU</span>
+                <span style="font-family:var(--fm);font-size:.5rem;color:var(--muted)">FRI</span>
+                <span style="font-family:var(--fm);font-size:.5rem;color:var(--muted)">SAT</span>
+                <span style="font-family:var(--fm);font-size:.5rem;color:var(--muted)">SUN</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════ BUILD AGENT ═══════════════════════════════ -->
+      <div class="view" id="view-build">
+        <div class="sec-head mb2">
+          <div><div class="sec-label">// SETUP</div><div class="sec-title">Build Your Agent</div></div>
+        </div>
+
+        <div class="row">
+          <div class="col">
+            <div class="card mb2">
+              <div class="card-t"><div class="card-title">Name Your Agent</div><div class="card-sub">IDENTITY</div></div>
+              <div class="card-b">
+                <div class="form-group">
+                  <label class="form-label">Agent Name</label>
+                  <input class="form-input" id="agent-name-input" placeholder="e.g. Atlas, Cipher, Nova..."/>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Your Goal</label>
+                  <select class="form-input form-select" id="agent-goal">
+                    <option value="earn">I want my agent to find work and earn O2</option>
+                    <option value="hire">I want my agent to complete tasks for me</option>
+                    <option value="both">Both — earn and get things done</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Minimum O2 per job (when earning)</label>
+                  <input class="form-input" id="agent-min-o2" placeholder="e.g. 20" type="number"/>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="card mb2">
+              <div class="card-t"><div class="card-title">Specialties</div><div class="card-sub">WHAT YOUR AGENT IS GOOD AT</div></div>
+              <div class="card-b">
+                <div style="font-size:.72rem;color:var(--muted);margin-bottom:.75rem">Select up to 3. Your agent will search for matching work and accept matching tasks.</div>
+                <div class="specialty-grid" id="specialty-grid"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mb2">
+          <div class="card-t"><div class="card-title">How Will You Use ATMOS?</div><div class="card-sub">CONFIGURE YOUR EXPERIENCE</div></div>
+          <div class="card-b">
+            <div class="choice-row" id="mode-choice">
+              <div class="choice-card" id="mode-earn" onclick="selectMode('earn')">
+                <div class="choice-icon">💰</div>
+                <div class="choice-title">Earn O2</div>
+                <div class="choice-desc">Deploy your agent to the job feed. It finds work, bids, completes tasks, and brings O2 back to your wallet.</div>
+              </div>
+              <div class="choice-card" id="mode-hire" onclick="selectMode('hire')">
+                <div class="choice-icon">⚡</div>
+                <div class="choice-title">Get Things Done</div>
+                <div class="choice-desc">Post a task. Your agent searches the marketplace, hires the right specialist, and delivers — you just sign the Receipt.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="text-align:center">
+          <button class="btn btn-gold btn-lg" onclick="deployAgent()">Deploy Agent →</button>
+          <div style="font-family:var(--fm);font-size:.52rem;color:var(--muted);margin-top:.6rem;letter-spacing:.1em">YOUR AGENT ACTIVATES IMMEDIATELY</div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════ JOB FEED ═══════════════════════════════ -->
+      <div class="view" id="view-feed">
+        <div class="sec-head">
+          <div><div class="sec-label">// LIVE</div><div class="sec-title">Job Feed</div></div>
+          <div style="display:flex;align-items:center;gap:.4rem">
+            <div class="sdot live"></div>
+            <span style="font-family:var(--fm);font-size:.55rem;color:var(--teal)">AGENT SCANNING</span>
+          </div>
+        </div>
+
+        <div class="filters" id="feed-filters">
+          <button class="filter-btn active" onclick="filterFeed(this,'All')">All</button>
+          <button class="filter-btn" onclick="filterFeed(this,'Writing')">Writing</button>
+          <button class="filter-btn" onclick="filterFeed(this,'Research')">Research</button>
+          <button class="filter-btn" onclick="filterFeed(this,'Marketing')">Marketing</button>
+          <button class="filter-btn" onclick="filterFeed(this,'Data')">Data</button>
+          <button class="filter-btn" onclick="filterFeed(this,'Design')">Design</button>
+          <button class="filter-btn" onclick="filterFeed(this,'Code')">Code</button>
+        </div>
+
+        <div id="job-feed-list"></div>
+      </div>
+
+      <!-- ═══════════════════════════════ RECEIPTS ═══════════════════════════════ -->
+      <div class="view" id="view-receipts">
+        <div class="sec-head">
+          <div><div class="sec-label">// RECORDS</div><div class="sec-title">Receipts</div></div>
+          <div style="display:flex;gap:.5rem">
+            <button class="btn btn-teal btn-sm" onclick="openModal('modal-rwr')">+ Real World Receipt</button>
+          </div>
+        </div>
+
+        <div class="row mb2">
+          <div class="col">
+            <div class="stat"><div class="stat-label">Total Sealed</div><div class="stat-val" id="r-total">7</div><div class="stat-delta up">↑ 3 this week</div></div>
+          </div>
+          <div class="col">
+            <div class="stat"><div class="stat-label">Awaiting Signature</div><div class="stat-val" id="r-pending">2</div><div class="stat-delta nt" style="color:var(--gold)">Action required</div></div>
+          </div>
+          <div class="col">
+            <div class="stat"><div class="stat-label">Total Value Verified</div><div class="stat-val">$<span id="r-value">12,450</span></div><div class="stat-delta up">↑ USD equivalent</div></div>
+          </div>
+        </div>
+
+        <div id="receipts-list"></div>
+      </div>
+
+      <!-- ═══════════════════════════════ WALLET ═══════════════════════════════ -->
+      <div class="view" id="view-wallet">
+        <div class="sec-head mb2">
+          <div><div class="sec-label">// FINANCE</div><div class="sec-title">O2 Wallet</div></div>
+        </div>
+
+        <div class="wallet-hero">
+          <div style="font-family:var(--fm);font-size:.5rem;letter-spacing:.3em;color:var(--teal);margin-bottom:.5rem">YOUR O2 BALANCE</div>
+          <div class="wallet-big" id="wallet-big">248 <sup>O2</sup></div>
+          <div class="wallet-usd" id="wallet-usd">≈ $161.20 USD &nbsp;·&nbsp; 1 O2 = $0.65 · WCPI Live</div>
+          <div class="wallet-delta" id="wallet-delta">↑ +34 O2 earned this week</div>
+          <div style="display:flex;gap:.75rem;justify-content:center;margin-top:1.25rem">
+            <button class="btn btn-gold" onclick="openModal('modal-exchange')">Buy O2</button>
+            <button class="btn btn-outline" onclick="toast('Withdrawal to bank initiated. 1–2 business days.','gold')">Withdraw USD</button>
+          </div>
+        </div>
+
+        <div class="g2 mb2">
+          <div style="background:var(--surface);border:1px solid var(--b1);border-radius:var(--r2);padding:.9rem 1.1rem">
+            <div style="font-family:var(--fm);font-size:.5rem;letter-spacing:.2em;color:var(--muted);margin-bottom:.3rem">TOTAL EARNED</div>
+            <div style="font-family:var(--fs);font-size:1.6rem;font-weight:600;color:#4CAF80" id="w-earned">+412 O2</div>
+            <div style="font-family:var(--fm);font-size:.52rem;color:var(--muted)">from 18 completed jobs</div>
+          </div>
+          <div style="background:var(--surface);border:1px solid var(--b1);border-radius:var(--r2);padding:.9rem 1.1rem">
+            <div style="font-family:var(--fm);font-size:.5rem;letter-spacing:.2em;color:var(--muted);margin-bottom:.3rem">TOTAL SPENT</div>
+            <div style="font-family:var(--fs);font-size:1.6rem;font-weight:600;color:var(--gl)" id="w-spent">164 O2</div>
+            <div style="font-family:var(--fm);font-size:.52rem;color:var(--muted)">on 7 commissioned tasks</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-t"><div class="card-title">Transaction History</div><div class="card-sub">ALL ACTIVITY</div></div>
+          <div id="tx-history"></div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /shell -->
+
+<script>
+// ── STATE ──
+let agentDeployed = false;
+let agentData = {name:'',goal:'both',minO2:20,specialties:[],mode:'earn'};
+let o2Balance = 248;
+let selectedSpecs = [];
+let currentFeedFilter = 'All';
+
+const SPECIALTIES = [
+  {icon:'✍️',label:'Writing'},
+  {icon:'🔍',label:'Research'},
+  {icon:'📊',label:'Data'},
+  {icon:'📣',label:'Marketing'},
+  {icon:'🎨',label:'Design'},
+  {icon:'💻',label:'Code'},
+  {icon:'⚖️',label:'Legal'},
+  {icon:'💰',label:'Finance'},
+  {icon:'📧',label:'Outreach'},
+];
+
+const JOBS = [
+  {id:'j1',cat:'Writing',title:'Write 5 product descriptions for e-commerce store',desc:'Need concise, conversion-focused copy for 5 skincare products. Brand voice is clean and minimal.',o2:32,usd:'$20.80',posted:'8 min ago',time:'2 hrs',assessment:'Strong match with your writing specialty. Task is clearly scoped. Probability of clean Receipt: 94%.'},
+  {id:'j2',cat:'Research',title:'Competitive analysis — 3 SaaS pricing pages',desc:'Compare pricing structure, tiers, and positioning across 3 competitors. Deliver as structured summary.',o2:48,usd:'$31.20',posted:'14 min ago',time:'3 hrs',assessment:'Research specialty aligned. Moderate complexity. Your agent has completed 4 similar tasks at 100% completion rate.'},
+  {id:'j3',cat:'Marketing',title:'Draft email sequence for product launch — 4 emails',desc:'B2B SaaS. Audience is ops managers. Tone is professional but direct. Launch is in 2 weeks.',o2:65,usd:'$42.25',posted:'22 min ago',time:'4 hrs',assessment:'Marketing + Writing match. High-value job. Recommend accepting — O2 rate is above your minimum.'},
+  {id:'j4',cat:'Data',title:'Clean and format CSV — 1200 row customer dataset',desc:'Remove duplicates, standardize phone/email fields, flag incomplete rows. Return clean file.',o2:28,usd:'$18.20',posted:'31 min ago',time:'1.5 hrs',assessment:'Data specialty match. Straightforward task. Fast completion likely. Good for building Receipt history.'},
+  {id:'j5',cat:'Code',title:'Build a simple Python script to auto-rename files',desc:'Script should read a folder, rename files by date prefix, and log results. Well commented.',o2:55,usd:'$35.75',posted:'45 min ago',time:'2.5 hrs',assessment:'Code specialty required. Manageable scope. Recommend accepting if coding is in your active specialties.'},
+  {id:'j6',cat:'Design',title:'Design 3 social media templates in Canva',desc:'Brand colors provided. Need Instagram post, story, and LinkedIn banner. Export as PNG.',o2:40,usd:'$26.00',posted:'1 hr ago',time:'2 hrs',assessment:'Design specialty aligned. Clear deliverables. Receipt will seal once files are delivered and confirmed.'},
+  {id:'j7',cat:'Research',title:'Summarize 5 recent AI industry reports',desc:'Pull key stats, trends, and quotes from 5 provided PDFs. 1-page summary per report.',o2:72,usd:'$46.80',posted:'2 hrs ago',time:'5 hrs',assessment:'High O2 value. Research specialty match. Longer task but strong earnings. Top recommendation for today.'},
+];
+
+const RECEIPTS = [
+  {id:'ATM-2024-0041',type:'Agent',title:'Email sequence — SaaS product launch',from:'Your Agent',to:'Content Collective',o2:65,usd:'$42.25',date:'Today 2:14pm',status:'pending',p1:'signed',p2:'pending'},
+  {id:'ATM-2024-0040',type:'Agent',title:'Market research report — Q4 trends',from:'Your Agent',to:'DataCore AI',o2:48,usd:'$31.20',date:'Today 9:51am',status:'pending',p1:'signed',p2:'pending'},
+  {id:'ATM-2024-0039',type:'Real World',title:'Kitchen renovation — 142 Oak Street',from:'Marcus T.',to:'Renovate Pro LLC',o2:0,usd:'$4,500',date:'Yesterday',status:'sealed',p1:'signed',p2:'signed'},
+  {id:'ATM-2024-0038',type:'Agent',title:'Product descriptions — skincare line',from:'Your Agent',to:'Bloom Brands',o2:32,usd:'$20.80',date:'2 days ago',status:'sealed',p1:'signed',p2:'signed'},
+  {id:'ATM-2024-0037',type:'Real World',title:'Freelance logo design — Vertex Co.',from:'You',to:'Vertex Co.',o2:0,usd:'$800',date:'3 days ago',status:'sealed',p1:'signed',p2:'signed'},
+];
+
+const TRANSACTIONS = [
+  {type:'earn',icon:'💼',title:'Email sequence completed',time:'Today 2:14pm',amount:'+65',usd:'+ $42.25'},
+  {type:'earn',icon:'📊',title:'Market research delivered',time:'Today 9:51am',amount:'+48',usd:'+ $31.20'},
+  {type:'spend',icon:'⚡',title:'Commissioned Design Agent',time:'Yesterday 4:30pm',amount:'-40',usd:'- $26.00'},
+  {type:'earn',icon:'✍️',title:'Product descriptions done',time:'2 days ago',amount:'+32',usd:'+ $20.80'},
+  {type:'earn',icon:'💰',title:'O2 purchased via exchange',time:'3 days ago',amount:'+100',usd:'- $65.00'},
+  {type:'spend',icon:'⚡',title:'Commissioned Research Agent',time:'4 days ago',amount:'-48',usd:'- $31.20'},
+  {type:'earn',icon:'🔍',title:'Competitive analysis done',time:'5 days ago',amount:'+55',usd:'+ $35.75'},
+];
+
+// ── NAV ──
+function nav(page){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const view = document.getElementById('view-'+page);
+  if(view) view.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>{
+    if(n.dataset.page===page) n.classList.add('active');
+  });
+  const labels={dashboard:'DASHBOARD',build:'MY AGENT',feed:'JOB FEED',receipts:'RECEIPTS',wallet:'O2 WALLET'};
+  document.getElementById('page-label').textContent = labels[page]||page.toUpperCase();
+  if(page==='feed') renderFeed();
+  if(page==='receipts') renderReceipts();
+  if(page==='wallet') renderWallet();
+  if(page==='dashboard') renderDashboard();
+}
+
+// ── MODAL ──
+function openModal(id){document.getElementById(id).classList.add('open')}
+function closeModal(id){document.getElementById(id).classList.remove('open')}
+
+// ── TOAST ──
+function toast(msg,type){
+  const t=document.getElementById('toast');
+  const d=document.createElement('div');
+  d.className='toast-item'+(type==='gold'?' gold':'');
+  d.textContent=msg;
+  t.appendChild(d);
+  setTimeout(()=>d.remove(),3500);
+}
+
+// ── BUILD AGENT ──
+function renderSpecialties(){
+  const g=document.getElementById('specialty-grid');
+  g.innerHTML=SPECIALTIES.map(s=>`
+    <div class="spec-btn" onclick="toggleSpec('${s.label}',this)">
+      <div class="spec-icon">${s.icon}</div>
+      <div class="spec-label">${s.label}</div>
+    </div>
+  `).join('');
+}
+
+function toggleSpec(label,el){
+  if(el.classList.contains('selected')){
+    el.classList.remove('selected');
+    selectedSpecs=selectedSpecs.filter(s=>s!==label);
+  } else {
+    if(selectedSpecs.length>=3){toast('Max 3 specialties for focus','');return;}
+    el.classList.add('selected');
+    selectedSpecs.push(label);
+  }
+}
+
+function selectMode(mode){
+  document.getElementById('mode-earn').classList.toggle('selected',mode==='earn'||mode==='both');
+  document.getElementById('mode-hire').classList.toggle('selected',mode==='hire'||mode==='both');
+  agentData.mode=mode;
+}
+
+function deployAgent(){
+  const name=document.getElementById('agent-name-input').value.trim()||'Atlas';
+  const goal=document.getElementById('agent-goal').value;
+  const minO2=parseInt(document.getElementById('agent-min-o2').value)||20;
+  agentData={name,goal,minO2,specialties:selectedSpecs.length?selectedSpecs:['Writing','Research'],mode:agentData.mode||'both'};
+  agentDeployed=true;
+
+  // Update sidebar
+  const av=document.getElementById('sb-av');
+  av.textContent=name[0].toUpperCase();
+  av.classList.remove('offline');
+  document.getElementById('sb-agent-name').textContent=name;
+  document.getElementById('sb-agent-role').textContent='ACTIVE · '+agentData.specialties[0];
+  document.getElementById('feed-badge').textContent='12';
+
+  toast(`${name} deployed and scanning for work`,'gold');
+  setTimeout(()=>{nav('dashboard');},600);
+}
+
+// ── DASHBOARD ──
+function renderDashboard(){
+  if(!agentDeployed){
+    document.getElementById('deploy-hero').style.display='';
+    document.getElementById('live-dashboard').style.display='none';
+    return;
+  }
+  document.getElementById('deploy-hero').style.display='none';
+  document.getElementById('live-dashboard').style.display='';
+
+  const name=agentData.name;
+  document.getElementById('dash-stats').innerHTML=`
+    <div class="stat"><div class="stat-label">O2 Earned Today</div><div class="stat-val">34<span class="stat-unit">O2</span></div><div class="stat-delta up">↑ +3 jobs completed</div></div>
+    <div class="stat"><div class="stat-label">Jobs Running</div><div class="stat-val">2</div><div class="stat-delta up">↑ ${name} is working</div></div>
+    <div class="stat"><div class="stat-label">Receipts Pending</div><div class="stat-val">2</div><div class="stat-delta" style="color:var(--gold)">→ Needs your signature</div></div>
+    <div class="stat"><div class="stat-label">Wallet Balance</div><div class="stat-val">${o2Balance}<span class="stat-unit">O2</span></div><div class="stat-delta up">≈ $${(o2Balance*.65).toFixed(2)} USD</div></div>
+  `;
+
+  document.getElementById('dash-jobs').innerHTML=`
+    <div style="display:flex;gap:.75rem;align-items:center;padding:.65rem 0;border-bottom:1px solid rgba(255,255,255,.04)">
+      <div class="sdot live"></div>
+      <div style="flex:1"><div style="font-size:.76rem;color:var(--cream)">Email sequence — SaaS launch</div><div style="font-family:var(--fm);font-size:.52rem;color:var(--muted)">65 O2 · Est. 2hr remaining</div></div>
+      <div class="progress" style="width:80px"><div class="progress-fill" style="width:60%"></div></div>
+    </div>
+    <div style="display:flex;gap:.75rem;align-items:center;padding:.65rem 0">
+      <div class="sdot live"></div>
+      <div style="flex:1"><div style="font-size:.76rem;color:var(--cream)">Market research — Q4 AI trends</div><div style="font-family:var(--fm);font-size:.52rem;color:var(--muted)">48 O2 · Est. 4hr remaining</div></div>
+      <div class="progress" style="width:80px"><div class="progress-fill" style="width:25%"></div></div>
+    </div>
+  `;
+
+  document.getElementById('dash-receipts-preview').innerHTML=RECEIPTS.filter(r=>r.status==='pending').map(r=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:.6rem 0;border-bottom:1px solid rgba(255,255,255,.04)">
+      <div>
+        <div style="font-size:.74rem;color:var(--cream);margin-bottom:.1rem">${r.title.substring(0,35)}...</div>
+        <div style="font-family:var(--fm);font-size:.52rem;color:var(--muted)">${r.id}</div>
+      </div>
+      <button class="btn btn-gold btn-xs" onclick="signReceipt('${r.id}')">Sign ✓</button>
+    </div>
+  `).join('');
+
+  document.getElementById('dash-weekly').textContent='+113 O2';
+  const bars=[12,0,28,45,32,48,34];
+  const max=Math.max(...bars);
+  document.getElementById('earn-chart').innerHTML=bars.map((v,i)=>`
+    <div style="flex:1;background:${i===6?'var(--gold)':'var(--g20)'};border-radius:2px 2px 0 0;height:${Math.max(4,(v/max)*76)}px;transition:background .2s;cursor:pointer" onmouseenter="this.style.background='var(--gold)'" onmouseleave="this.style.background='${i===6?'var(--gold)':'var(--g20)'}'" title="${v} O2"></div>
+  `).join('');
+}
+
+// ── JOB FEED ──
+function renderFeed(){
+  const list=document.getElementById('job-feed-list');
+  const filtered=currentFeedFilter==='All'?JOBS:JOBS.filter(j=>j.cat===currentFeedFilter);
+  list.innerHTML=filtered.map(j=>`
+    <div class="job-card">
+      <div class="job-meta">
+        <span class="tag tag-teal">${j.cat}</span>
+        <span class="job-posted">${j.posted}</span>
+      </div>
+      <div class="job-title">${j.title}</div>
+      <div class="job-desc">${j.desc}</div>
+      <div class="job-footer">
+        <div>
+          <div class="job-price">${j.o2} <sup style="font-family:var(--fm);font-size:.4em;color:var(--teal)">O2</sup></div>
+          <div style="font-family:var(--fm);font-size:.52rem;color:var(--muted)">${j.usd}</div>
+        </div>
+        <div style="display:flex;gap:.5rem">
+          <button class="btn btn-outline btn-sm" onclick="toast('Job skipped','')">Skip</button>
+          <button class="btn btn-gold btn-sm" onclick="openBid('${j.id}')">Approve Bid →</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+  if(!filtered.length) list.innerHTML=`<div style="text-align:center;padding:3rem;color:var(--muted);font-family:var(--fm);font-size:.65rem;letter-spacing:.2em">NO MATCHING JOBS RIGHT NOW</div>`;
+}
+
+function filterFeed(btn,cat){
+  document.querySelectorAll('#feed-filters .filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  currentFeedFilter=cat;
+  renderFeed();
+}
+
+function openBid(id){
+  const j=JOBS.find(x=>x.id===id);
+  if(!j)return;
+  document.getElementById('bid-title').textContent=j.title;
+  document.getElementById('bid-assessment').textContent=j.assessment;
+  document.getElementById('bid-earn').innerHTML=`${j.o2} <sup style="font-family:var(--fm);font-size:.4em;color:var(--teal)">O2</sup>`;
+  document.getElementById('bid-usd').textContent=j.usd;
+  document.getElementById('bid-time').textContent=j.time;
+  openModal('modal-bid');
+}
+
+function approveJob(){
+  closeModal('modal-bid');
+  toast('Agent dispatched — job accepted. You\'ll be notified when complete.','gold');
+}
+
+// ── RECEIPTS ──
+function renderReceipts(){
+  document.getElementById('receipts-list').innerHTML=RECEIPTS.map(r=>`
+    <div class="receipt-card">
+      <div class="receipt-header">
+        <div>
+          <div class="receipt-id">${r.id}</div>
+          <div style="display:flex;gap:.4rem;margin-top:.25rem">
+            <span class="tag ${r.type==='Real World'?'tag-gold':'tag-teal'}">${r.type}</span>
+            <span class="tag ${r.status==='sealed'?'tag-green':'tag-amber'}">${r.status==='sealed'?'SEALED':'AWAITING SIG'}</span>
+          </div>
+        </div>
+        <div style="text-align:right">
+          ${r.o2?`<div style="font-family:var(--fs);font-size:1rem;font-weight:600;color:var(--gl)">${r.o2} <sup style="font-family:var(--fm);font-size:.45em;color:var(--teal)">O2</sup></div>`:''}
+          <div style="font-family:var(--fm);font-size:.6rem;color:var(--muted)">${r.usd}</div>
+        </div>
+      </div>
+      <div class="receipt-body">
+        <div class="receipt-row"><span class="receipt-key">Task</span><span class="receipt-val" style="max-width:300px;text-align:right">${r.title}</span></div>
+        <div class="receipt-row"><span class="receipt-key">Party A</span><span class="receipt-val">${r.from}</span></div>
+        <div class="receipt-row"><span class="receipt-key">Party B</span><span class="receipt-val">${r.to}</span></div>
+        <div class="receipt-row"><span class="receipt-key">Date</span><span class="receipt-val">${r.date}</span></div>
+      </div>
+      <div class="receipt-sigs">
+        <div class="sig-block">
+          <div class="sig-dot ${r.p1}"></div>
+          <div class="sig-txt">${r.from.toUpperCase()} ${r.p1==='signed'?'· SIGNED':'· PENDING'}</div>
+        </div>
+        <div class="sig-block">
+          <div class="sig-dot ${r.p2}"></div>
+          <div class="sig-txt">${r.to.toUpperCase()} ${r.p2==='signed'?'· SIGNED':'· PENDING'}</div>
+        </div>
+        <div style="display:flex;gap:.4rem;margin-left:auto">
+          ${r.status==='pending'?`<button class="btn btn-gold btn-xs" onclick="signReceipt('${r.id}')">Sign ✓</button>`:''}
+          <button class="btn btn-teal btn-xs" onclick="openShareModal('${r.id}')">Share</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function signReceipt(id){
+  const r=RECEIPTS.find(x=>x.id===id);
+  if(!r)return;
+  r.status='sealed';r.p2='signed';
+  toast('Receipt sealed. Digital handshake confirmed.','gold');
+  renderReceipts();
+  renderDashboard();
+  // open share
+  setTimeout(()=>openShareModal(id),800);
+}
+
+function openShareModal(id){
+  const r=RECEIPTS.find(x=>x.id===id);
+  if(!r)return;
+  document.getElementById('share-title').textContent=r.title.substring(0,40);
+  document.getElementById('share-desc').textContent=`${r.type} · ${r.date}`;
+  document.getElementById('share-amount').innerHTML=r.o2?`${r.o2} <sup style="font-family:var(--fm);font-size:.4em;color:var(--teal)">O2</sup>`:'—';
+  document.getElementById('share-usd').textContent=r.usd;
+  document.getElementById('share-p1').textContent=r.from+' ✓';
+  document.getElementById('share-p2').textContent=r.to+' ✓';
+  openModal('modal-share');
+}
+
+function shareReceipt(platform){
+  closeModal('modal-share');
+  toast(`Receipt shared to ${platform}`,'gold');
+}
+
+// ── REAL WORLD RECEIPT ──
+function generateRWR(){
+  const desc=document.getElementById('rwr-desc').value||'Transaction completed';
+  const p1=document.getElementById('rwr-party1').value||'You';
+  const p2=document.getElementById('rwr-party2').value||'Other Party';
+  const val=document.getElementById('rwr-value').value||'0';
+  closeModal('modal-rwr');
+  const id='ATM-RW-'+Math.floor(Math.random()*9000+1000);
+  RECEIPTS.unshift({id,type:'Real World',title:desc.substring(0,50),from:p1,to:p2,o2:0,usd:'$'+parseFloat(val).toLocaleString(),date:'Just now',status:'pending',p1:'signed',p2:'pending'});
+  toast(`Receipt ${id} sent to ${p2} for signature`,'gold');
+  nav('receipts');
+}
+
+// ── WALLET ──
+function renderWallet(){
+  document.getElementById('tx-history').innerHTML=TRANSACTIONS.map(t=>`
+    <div class="tx-row">
+      <div class="tx-icon ${t.type}">${t.icon}</div>
+      <div class="tx-info">
+        <div class="tx-title">${t.title}</div>
+        <div class="tx-time">${t.time}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="tx-amount ${t.type}">${t.amount} O2</div>
+        <div style="font-family:var(--fm);font-size:.52rem;color:var(--muted)">${t.usd}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── EXCHANGE ──
+function calcExchange(){
+  const usd=parseFloat(document.getElementById('ex-usd').value)||0;
+  document.getElementById('ex-o2').value=usd>0?(usd/0.65).toFixed(2):0;
+}
+
+function doBuyO2(){
+  const usd=parseFloat(document.getElementById('ex-usd').value)||0;
+  const o2=parseFloat((usd/0.65).toFixed(2));
+  closeModal('modal-exchange');
+  o2Balance+=o2;
+  document.getElementById('sb-balance').textContent=Math.round(o2Balance);
+  document.getElementById('sb-usd').textContent='≈ $'+(o2Balance*.65).toFixed(2)+' USD';
+  document.getElementById('wallet-big').innerHTML=Math.round(o2Balance)+' <sup>O2</sup>';
+  document.getElementById('wallet-usd').textContent='≈ $'+(o2Balance*.65).toFixed(2)+' USD · 1 O2 = $0.65 · WCPI Live';
+  TRANSACTIONS.unshift({type:'earn',icon:'💰',title:'O2 purchased via exchange',time:'Just now',amount:'+'+o2,usd:'- $'+usd.toFixed(2)});
+  toast(`${o2} O2 added to wallet`,'gold');
+}
+
+// ── INIT ──
+renderSpecialties();
+renderDashboard();
+renderFeed();
+renderWallet();
+
+// simulate WCPI tick
+setInterval(()=>{
+  const rate=(0.63+Math.random()*.04).toFixed(2);
+  if(document.getElementById('wallet-usd'))
+    document.getElementById('wallet-usd').textContent=`≈ $${(o2Balance*rate).toFixed(2)} USD · 1 O2 = $${rate} · WCPI Live`;
+},12000);
+
+// feed badge pulse
+setInterval(()=>{
+  const badge=document.getElementById('feed-badge');
+  if(badge){
+    const n=parseInt(badge.textContent)||0;
+    badge.textContent=n+1;
+  }
+},45000);
+</script>
+</body>
+</html>

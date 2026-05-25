@@ -1,0 +1,136 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id              String   @id @default(cuid())
+  email           String   @unique
+  name            String?
+  password        String?
+  o2Balance       Float    @default(0)
+  onboardingPath  String   @default("economy")
+  createdAt       DateTime @default(now())
+
+  agent          Agent?
+  txHistory      Transaction[]
+  postedJobs     Job[]         @relation("PostedJobs")
+  receiptsOwned  Receipt[]     @relation("ReceiptOwner")
+  receiptsPartyA Receipt[]     @relation("ReceiptPartyA")
+  receiptsPartyB Receipt[]     @relation("ReceiptPartyB")
+  disputes       Dispute[]
+}
+
+model Agent {
+  id           String   @id @default(cuid())
+  name         String
+  goal         String
+  mode         String
+  specialties  String
+  minO2        Float    @default(20)
+  personality  String?
+  systemPrompt String?
+  provider     String   @default("anthropic")
+  model        String   @default("claude-sonnet-4-20250514")
+  apiKey       String?
+  baseUrl      String?
+  importedFrom String?
+  isLive       Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  userId       String   @unique
+
+  user User  @relation(fields: [userId], references: [id])
+  jobs Job[]
+}
+
+model Job {
+  id             String   @id @default(cuid())
+  title          String
+  description    String
+  category       String
+  o2Budget       Float
+  timeLimit      String?
+  status         String   @default("open")
+  assessment     String?
+  output         String?
+  postedById     String?
+  acceptedById   String?
+  agentId        String?
+  tokensIn       Int?
+  tokensOut      Int?
+  computeCostUsd Float?
+  platformFeeUsd Float?
+  o2Cost         Float?
+  o2Refund       Float?
+  createdAt      DateTime @default(now())
+
+  postedBy User?    @relation("PostedJobs", fields: [postedById], references: [id])
+  agent    Agent?   @relation(fields: [agentId], references: [id])
+  receipt  Receipt?
+  dispute  Dispute?
+}
+
+model Receipt {
+  id                 String    @id @default(cuid())
+  receiptNumber      String    @unique
+  type               String
+  title              String
+  description        String?
+  partyAId           String?
+  partyAName         String
+  partyBId           String?
+  partyBName         String
+  settlementCurrency String    @default("O2")
+  settlementAmount   String?
+  paymentMethod      String?
+  paymentNotes       String?
+  status             String    @default("pending")
+  sigA               Boolean   @default(false)
+  sigAAt             DateTime?
+  sigB               Boolean   @default(false)
+  sigBAt             DateTime?
+  sealedAt           DateTime?
+  shareToken         String?   @unique
+  jobId              String?   @unique
+  ownerId            String
+  createdAt          DateTime  @default(now())
+
+  job     Job?     @relation(fields: [jobId], references: [id])
+  owner   User     @relation("ReceiptOwner", fields: [ownerId], references: [id])
+  partyA  User?    @relation("ReceiptPartyA", fields: [partyAId], references: [id])
+  partyB  User?    @relation("ReceiptPartyB", fields: [partyBId], references: [id])
+  dispute Dispute?
+}
+
+model Dispute {
+  id           String   @id @default(cuid())
+  reason       String
+  status       String   @default("open")
+  resolution   String?
+  votesFor     Int      @default(0)
+  votesAgainst Int      @default(0)
+  jobId        String?  @unique
+  receiptId    String?  @unique
+  userId       String
+  createdAt    DateTime @default(now())
+
+  job     Job?     @relation(fields: [jobId], references: [id])
+  receipt Receipt? @relation(fields: [receiptId], references: [id])
+  user    User     @relation(fields: [userId], references: [id])
+}
+
+model Transaction {
+  id        String   @id @default(cuid())
+  type      String
+  title     String
+  o2Amount  Float
+  usdAmount String?
+  jobId     String?
+  userId    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}

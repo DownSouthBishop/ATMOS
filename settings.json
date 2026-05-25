@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run dev)",
+      "Bash(npm install*)",
+      "Bash(npx prisma*)",
+      "Bash(npx create-next-app*)",
+      "Bash(npx tsc*)",
+      "Bash(npm run build)",
+      "Bash(npm run lint)",
+      "Bash(git add*)",
+      "Bash(git commit*)",
+      "Bash(git status)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(openssl rand*)",
+      "Bash(mkdir -p*)",
+      "Bash(cp atmos-launch.html*)",
+      "Read(**)",
+      "Write(src/**)",
+      "Write(prisma/**)",
+      "Write(.env.local)",
+      "Write(CLAUDE.md)",
+      "Write(.claude/**)",
+      "Write(package.json)",
+      "Write(tailwind.config*)",
+      "Write(tsconfig.json)",
+      "Write(next.config*)"
+    ],
+    "deny": [
+      "Write(atmos-launch.html)",
+      "Bash(rm -rf*)",
+      "Bash(curl*)",
+      "Bash(wget*)"
+    ]
+  },
+  "model": "claude-sonnet-4-20250514"
+}
