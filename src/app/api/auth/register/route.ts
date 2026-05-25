@@ -34,7 +34,8 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ data: { ok: true } });
-  } catch {
+  } catch (err) {
+    console.error('[register] error:', err);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }
